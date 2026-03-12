@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary-green: #064E3B; /* Deep Emerald Green */
+  --primary-green-light: #0d6b53;
+  --primary-gold: #D4AF37; /* Metallic Gold */
+  --primary-gold-light: #f3d46a;
+  --bg-dark: #022c22;
+  --bg-card: rgba(6, 78, 59, 0.4);
+  --text-light: #f8fafc;
+  --text-muted: #cbd5e1;
+  --danger: #ef4444;
+  
+  --glass-bg: rgba(6, 78, 59, 0.4);
+  --glass-border: rgba(212, 175, 55, 0.3);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+  color: var(--text-light);
+  background-color: var(--bg-dark);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  background: radial-gradient(circle at 50% 10%, #064E3B 0%, #022c22 80%);
+  background-attachment: fixed;
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  box-shadow: var(--glass-shadow);
+}
+
+.gold-gradient-text {
+  background: linear-gradient(135deg, var(--primary-gold), #FFF8DC);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  background: none;
+  outline: none;
+}
