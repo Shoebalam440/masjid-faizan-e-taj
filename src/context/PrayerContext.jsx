@@ -11,6 +11,26 @@ const defaultTimings = {
 
 const PrayerContext = createContext(null);
 
+// Audio reference for azaan (created outside to prevent re-creation on every tick)
+const azaanAudio = new Audio('https://www.islamcan.com/audio/adhan/azan3.mp3');
+
+// Unlock audio on mobile with first user interaction
+const unlockAudio = () => {
+  // Try playing an empty/silent tick or just play and pause immediately
+  azaanAudio.play().then(() => {
+    azaanAudio.pause();
+    azaanAudio.currentTime = 0;
+  }).catch(() => { }); // ignore errors if it doesn't work yet
+
+  document.removeEventListener('click', unlockAudio);
+  document.removeEventListener('touchstart', unlockAudio);
+};
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', unlockAudio);
+  document.addEventListener('touchstart', unlockAudio);
+}
+
 export const PrayerProvider = ({ children }) => {
   const [timings, setTimings] = useState(() => {
     const saved = localStorage.getItem('masjid_timings_v2');
@@ -18,9 +38,6 @@ export const PrayerProvider = ({ children }) => {
   });
 
   const [currentTime, setCurrentTime] = useState(new Date());
-
-  // Audio reference for azaan
-  const azaanAudio = new Audio('https://www.islamcan.com/audio/adhan/azan3.mp3');
 
   useEffect(() => {
     localStorage.setItem('masjid_timings_v2', JSON.stringify(timings));
@@ -68,6 +85,7 @@ export const PrayerProvider = ({ children }) => {
       });
     }
 
+    azaanAudio.currentTime = 0;
     azaanAudio.play().catch(e => console.error("Audio block by browser:", e));
   };
 
