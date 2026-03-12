@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon.png', 'mask-icon.svg', 'azan.mp3'],
       manifest: {
         name: 'Masjid Faizan e Taj',
         short_name: 'Faizan e Taj',

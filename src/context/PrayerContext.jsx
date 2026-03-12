@@ -12,7 +12,7 @@ const defaultTimings = {
 const PrayerContext = createContext(null);
 
 // Audio reference for azaan (created outside to prevent re-creation on every tick)
-const azaanAudio = new Audio('https://www.islamcan.com/audio/adhan/azan3.mp3');
+const azaanAudio = new Audio('/azan.mp3');
 
 // Unlock audio on mobile with first user interaction
 const unlockAudio = () => {
