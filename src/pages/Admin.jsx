@@ -70,7 +70,8 @@ const Admin = () => {
                         <ArrowLeft size={24} />
                     </button>
                 </Link>
-                <h1 className="gold-gradient-text" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>Update Timings</h1>
+                <img src="/icon.png" alt="Logo" style={{ width: '40px', height: '40px', borderRadius: '8px' }} />
+                <h1 className="gold-gradient-text" style={{ fontSize: '2rem', fontWeight: 'bold' }}>Update Timings</h1>
             </header>
 
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

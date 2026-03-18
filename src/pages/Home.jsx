@@ -51,11 +51,22 @@ const Home = () => {
     return (
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-                <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
-                    <h1 className="gold-gradient-text" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
-                        Masjid Faizan e Taj
-                    </h1>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>Live Prayer Timings & Azaan Notifications</p>
+                <motion.div 
+                    initial={{ x: -20, opacity: 0 }} 
+                    animate={{ x: 0, opacity: 1 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}
+                >
+                    <img 
+                      src="/icon.png" 
+                      alt="Logo" 
+                      style={{ width: '60px', height: '60px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }} 
+                    />
+                    <div>
+                        <h1 className="gold-gradient-text" style={{ fontSize: '2.2rem', fontWeight: 'bold', lineHeight: '1.1' }}>
+                            Masjid Faizan-E-Taj
+                        </h1>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Live Prayer Timings & Azaan Notifications</p>
+                    </div>
                 </motion.div>
 
                 <Link to="/admin">
