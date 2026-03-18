@@ -161,8 +161,22 @@ export const PrayerProvider = ({ children }) => {
     }
   };
 
+  const updateAllTimings = async (newTimingsObject) => {
+    setTimings(newTimingsObject);
+    if (supabase) {
+      try {
+        await supabase
+          .from('app_settings')
+          .update({ timings: newTimingsObject })
+          .eq('id', 'timings');
+      } catch (error) {
+        console.error("Failed to update Supabase bulk:", error);
+      }
+    }
+  };
+
   return (
-    <PrayerContext.Provider value={{ timings, updateTiming, currentTime }}>
+    <PrayerContext.Provider value={{ timings, updateTiming, updateAllTimings, currentTime }}>
       {children}
     </PrayerContext.Provider>
   );

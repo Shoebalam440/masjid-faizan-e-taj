@@ -5,36 +5,33 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Admin = () => {
-    const { timings, updateTiming, currentTime } = usePrayer();
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [password, setPassword] = useState('');
-    const [localTimings, setLocalTimings] = useState(timings);
-    const navigate = useNavigate();
+  const { timings, updateAllTimings, currentTime } = usePrayer();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [localTimings, setLocalTimings] = useState(timings);
+  const navigate = useNavigate();
 
-    const handleLogin = (e) => {
-        e.preventDefault();
-        if (password === 'admin123') {
-            setIsAuthenticated(true);
-        } else {
-            alert('Incorrect password');
-        }
-    };
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (password === 'admin123') {
+      setIsAuthenticated(true);
+    } else {
+      alert('Incorrect password');
+    }
+  };
 
-    const handleChange = (prayer, type, value) => {
-        setLocalTimings(prev => ({
-            ...prev,
-            [prayer]: { ...prev[prayer], [type]: value }
-        }));
-    };
+  const handleChange = (prayer, type, value) => {
+    setLocalTimings(prev => ({
+      ...prev,
+      [prayer]: { ...prev[prayer], [type]: value }
+    }));
+  };
 
-    const handleSave = () => {
-        Object.entries(localTimings).forEach(([prayer, timeObj]) => {
-            updateTiming(prayer, 'azaan', timeObj.azaan);
-            updateTiming(prayer, 'jamaat', timeObj.jamaat);
-        });
-        alert('Timings updated successfully!');
-        navigate('/');
-    };
+  const handleSave = async () => {
+    await updateAllTimings(localTimings);
+    alert('Timings updated successfully!');
+    navigate('/');
+  };
 
     if (!isAuthenticated) {
         return (
