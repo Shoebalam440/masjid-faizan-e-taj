@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MasjidFaizan</string>
+    <string name="title_activity_main">MasjidFaizan</string>
+    <string name="package_name">com.masjid.faizan.app</string>
+    <string name="custom_url_scheme">com.masjid.faizan.app</string>
+</resources>

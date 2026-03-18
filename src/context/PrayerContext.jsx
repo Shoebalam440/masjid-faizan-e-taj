@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../supabase';
 
 const defaultTimings = {
   fajar: { azaan: '05:20', jamaat: '05:27' },
@@ -41,6 +42,45 @@ export const PrayerProvider = ({ children }) => {
     const saved = localStorage.getItem('masjid_timings_v2');
     return saved ? JSON.parse(saved) : defaultTimings;
   });
+
+  // Real-time listener for Supabase
+  useEffect(() => {
+    if (!supabase) return; // if Supabase isn't configured, do nothing
+    
+    // Fetch initial timings
+    const fetchTimings = async () => {
+      const { data, error } = await supabase
+        .from('app_settings')
+        .select('*')
+        .eq('id', 'timings')
+        .single();
+        
+      if (data && data.timings) {
+        setTimings(data.timings);
+        localStorage.setItem('masjid_timings_v2', JSON.stringify(data.timings));
+      } else if (error && error.code === 'PGRST116') {
+        // Row doesn't exist, try to push default locally cached timings
+        await supabase.from('app_settings').insert([{ id: 'timings', timings: timings }]);
+      }
+    };
+    
+    fetchTimings();
+
+    // Subscribe to real-time changes
+    const subscription = supabase
+      .channel('app_settings_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'app_settings', filter: 'id=eq.timings' }, payload => {
+        if (payload.new && payload.new.timings) {
+          setTimings(payload.new.timings);
+          localStorage.setItem('masjid_timings_v2', JSON.stringify(payload.new.timings));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
 
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -99,11 +139,26 @@ export const PrayerProvider = ({ children }) => {
     azaanAudio.play().catch(e => console.error("Audio block by browser:", e));
   };
 
-  const updateTiming = (prayer, type, time) => {
-    setTimings(prev => ({
-      ...prev,
-      [prayer]: { ...prev[prayer], [type]: time }
-    }));
+  const updateTiming = async (prayer, type, time) => {
+    const newTimings = {
+      ...timings,
+      [prayer]: { ...timings[prayer], [type]: time }
+    };
+    
+    // Update local state immediately for fast response
+    setTimings(newTimings);
+    
+    // Push changes to Supabase if configured
+    if (supabase) {
+      try {
+        await supabase
+          .from('app_settings')
+          .update({ timings: newTimings })
+          .eq('id', 'timings');
+      } catch (error) {
+        console.error("Failed to update Supabase:", error);
+      }
+    }
   };
 
   return (
