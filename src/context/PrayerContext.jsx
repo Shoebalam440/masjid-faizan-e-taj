@@ -112,11 +112,37 @@ export const PrayerProvider = ({ children }) => {
         }
       )
       .subscribe((status) => {
-        console.log('Supabase channel status:', status);
+        console.log('📡 Supabase realtime status:', status);
       });
+
+    // ─── Polling fallback (har 15 second mein check) ───────────────────────
+    // Real-time WebSocket kabhi kabhi Capacitor WebView mein silently fail
+    // ho jata hai. Polling ensure karta hai ke changes hamesha milein.
+    const pollInterval = setInterval(async () => {
+      try {
+        const { data } = await supabase
+          .from('app_settings')
+          .select('timings')
+          .eq('id', 'timings')
+          .single();
+
+        if (data && data.timings) {
+          const fetched = JSON.stringify(data.timings);
+          const current = JSON.stringify(timingsRef.current);
+          if (fetched !== current) {
+            console.log('🔄 Polling: Naye timings mile, update ho raha hai...');
+            setTimings(data.timings);
+            scheduleAllNotifications(data.timings);
+          }
+        }
+      } catch (e) {
+        console.warn('Polling error:', e.message);
+      }
+    }, 15000); // 15 seconds
 
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(pollInterval);
     };
   }, []);
 

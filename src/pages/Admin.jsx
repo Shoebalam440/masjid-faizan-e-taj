@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePrayer } from '../context/PrayerContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
@@ -10,6 +10,11 @@ const Admin = () => {
   const [password, setPassword] = useState('');
   const [localTimings, setLocalTimings] = useState(timings);
   const navigate = useNavigate();
+
+  // Jab bhi Supabase se naye timings aayein, local state sync karo
+  useEffect(() => {
+    setLocalTimings(timings);
+  }, [timings]);
 
   const handleLogin = (e) => {
     e.preventDefault();
