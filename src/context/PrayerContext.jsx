@@ -56,15 +56,26 @@ export const PrayerProvider = ({ children }) => {
   useEffect(() => {
     if (!supabase) return;
 
-    // Request native notification permission
+    // Request native notification permission and create channel
     const requestNativePermission = async () => {
       try {
         const status = await LocalNotifications.checkPermissions();
         if (status.display !== 'granted') {
           await LocalNotifications.requestPermissions();
         }
+
+        // Create high importance channel for Azaan
+        await LocalNotifications.createChannel({
+          id: 'azaan_channel_v1',
+          name: 'Azaan Notifications',
+          description: 'Azaan sounds for prayer times',
+          importance: 5, // High Importance (plays sound and stays on screen)
+          sound: 'azan', // Use just the filename 'azan' (without .mp3 extension for Android resources)
+          visibility: 1, // Visible on lockscreen
+          vibration: true
+        });
       } catch (e) {
-        console.warn('LocalNotifications not available (web context):', e.message);
+        console.warn('LocalNotifications setup failed (likely web):', e.message);
       }
     };
     requestNativePermission();
@@ -191,8 +202,9 @@ export const PrayerProvider = ({ children }) => {
           title: `🕌 ${prayerNames[prayer]} ki Azaan`,
           body: `Masjid Faizan e Taj mein namaz ka waqt ho gaya.`,
           id: index + 1,
-          schedule: { at: scheduleDate, repeats: true, every: 'day' },
-          sound: 'azan.wav',
+          schedule: { at: scheduleDate, repeats: true, every: 'day', allowWhileIdle: true },
+          sound: 'azan', // Android resource name (azan)
+          channelId: 'azaan_channel_v1', // Link to the high importance channel
           actionTypeId: '',
           extra: null
         });
