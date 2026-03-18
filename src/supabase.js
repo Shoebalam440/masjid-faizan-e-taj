@@ -1,15 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = "https://mbeftedcgdzesmqwfgdo.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1iZWZ0ZWRjZ2R6ZXNtcXdmZ2RvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4MDczMzIsImV4cCI6MjA4OTM4MzMzMn0.23PTgkmPF53u3JlZS_ychPgL2D2zUXKNKEocd9K-06w";
 
 // Create a single supabase client for interacting with your database
-let supabase = null;
-
-if (supabaseUrl && supabaseAnonKey && supabaseUrl !== "paste_here") {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
-} else {
-  console.warn("Supabase not initialized! Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env.local file.");
-}
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export { supabase };

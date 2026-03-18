@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabase';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 const defaultTimings = {
   fajar: { azaan: '05:20', jamaat: '05:27' },
@@ -17,17 +18,13 @@ const azaanAudio = new Audio('/azan.mp3');
 
 // Unlock audio on mobile with first user interaction
 const unlockAudio = () => {
-  // Request Notification permission properly via user gesture
   if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
   }
-
-  // Try playing an empty/silent tick or just play and pause immediately
   azaanAudio.play().then(() => {
     azaanAudio.pause();
     azaanAudio.currentTime = 0;
-  }).catch(() => { }); // ignore errors if it doesn't work yet
-
+  }).catch(() => { });
   document.removeEventListener('click', unlockAudio);
   document.removeEventListener('touchstart', unlockAudio);
 };
@@ -39,54 +36,153 @@ if (typeof document !== 'undefined') {
 
 export const PrayerProvider = ({ children }) => {
   const [timings, setTimings] = useState(() => {
-    const saved = localStorage.getItem('masjid_timings_v2');
-    return saved ? JSON.parse(saved) : defaultTimings;
+    try {
+      const saved = localStorage.getItem('masjid_timings_v2');
+      return saved ? JSON.parse(saved) : defaultTimings;
+    } catch {
+      return defaultTimings;
+    }
   });
 
-  // Real-time listener for Supabase
+  const timingsRef = useRef(timings);
+
+  // Keep ref updated whenever timings state changes
   useEffect(() => {
-    if (!supabase) return; // if Supabase isn't configured, do nothing
-    
-    // Fetch initial timings
+    timingsRef.current = timings;
+    localStorage.setItem('masjid_timings_v2', JSON.stringify(timings));
+  }, [timings]);
+
+  // ─── Real-time Supabase listener ───────────────────────────────────────────
+  useEffect(() => {
+    if (!supabase) return;
+
+    // Request native notification permission
+    const requestNativePermission = async () => {
+      try {
+        const status = await LocalNotifications.checkPermissions();
+        if (status.display !== 'granted') {
+          await LocalNotifications.requestPermissions();
+        }
+      } catch (e) {
+        console.warn('LocalNotifications not available (web context):', e.message);
+      }
+    };
+    requestNativePermission();
+
+    // Fetch latest timings from Supabase on mount
     const fetchTimings = async () => {
       const { data, error } = await supabase
         .from('app_settings')
         .select('*')
         .eq('id', 'timings')
         .single();
-        
+
       if (data && data.timings) {
         setTimings(data.timings);
-        localStorage.setItem('masjid_timings_v2', JSON.stringify(data.timings));
+        scheduleAllNotifications(data.timings);
       } else if (error && error.code === 'PGRST116') {
-        // Row doesn't exist, try to push default locally cached timings
-        await supabase.from('app_settings').insert([{ id: 'timings', timings: timings }]);
+        // Row doesn't exist yet — create it with defaults
+        const current = timingsRef.current;
+        await supabase.from('app_settings').insert([{ id: 'timings', timings: current }]);
       }
     };
-    
+
     fetchTimings();
 
-    // Subscribe to real-time changes
-    const subscription = supabase
-      .channel('app_settings_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'app_settings', filter: 'id=eq.timings' }, payload => {
-        if (payload.new && payload.new.timings) {
-          setTimings(payload.new.timings);
-          localStorage.setItem('masjid_timings_v2', JSON.stringify(payload.new.timings));
+    // ── Supabase Realtime subscription ──
+    // This fires on ANY device when the admin updates timings in Supabase.
+    // Make sure "Replication" is turned ON for the `app_settings` table in Supabase.
+    const channel = supabase
+      .channel('realtime:app_settings')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',  // listen for UPDATE events
+          schema: 'public',
+          table: 'app_settings',
+          filter: 'id=eq.timings'
+        },
+        (payload) => {
+          console.log('🔴 Real-time update received:', payload);
+          if (payload.new && payload.new.timings) {
+            const newTimings = payload.new.timings;
+            setTimings(newTimings);                    // UI updates immediately
+            scheduleAllNotifications(newTimings);      // Reschedule notifications
+          }
         }
-      })
-      .subscribe();
+      )
+      .subscribe((status) => {
+        console.log('Supabase channel status:', status);
+      });
 
     return () => {
-      supabase.removeChannel(subscription);
+      supabase.removeChannel(channel);
     };
   }, []);
 
-  const [currentTime, setCurrentTime] = useState(new Date());
+  // ─── Schedule local notifications for all prayers ─────────────────────────
+  const scheduleAllNotifications = async (currentTimings) => {
+    try {
+      // Cancel all existing scheduled notifications first
+      const pending = await LocalNotifications.getPending();
+      if (pending.notifications.length > 0) {
+        await LocalNotifications.cancel({ notifications: pending.notifications });
+      }
 
-  useEffect(() => {
-    localStorage.setItem('masjid_timings_v2', JSON.stringify(timings));
-  }, [timings]);
+      const notifications = [];
+      const isFriday = new Date().getDay() === 5;
+
+      // Prayer display names
+      const prayerNames = {
+        fajar: 'Fajar',
+        zohr: 'Zohr',
+        asr: 'Asr',
+        maghrib: 'Maghrib',
+        isha: 'Isha',
+        juma: 'Juma'
+      };
+
+      // On Friday: use Juma instead of Zohr
+      const prayersToSchedule = isFriday
+        ? ['fajar', 'juma', 'asr', 'maghrib', 'isha']
+        : ['fajar', 'zohr', 'asr', 'maghrib', 'isha'];
+
+      prayersToSchedule.forEach((prayer, index) => {
+        const timeStr = currentTimings[prayer]?.azaan;
+        if (!timeStr) return;
+
+        const [hours, minutes] = timeStr.split(':').map(Number);
+
+        const scheduleDate = new Date();
+        scheduleDate.setHours(hours, minutes, 0, 0);
+
+        // If prayer time already passed today, schedule for tomorrow
+        if (scheduleDate <= new Date()) {
+          scheduleDate.setDate(scheduleDate.getDate() + 1);
+        }
+
+        notifications.push({
+          title: `🕌 ${prayerNames[prayer]} ki Azaan`,
+          body: `Masjid Faizan e Taj mein namaz ka waqt ho gaya.`,
+          id: index + 1,
+          schedule: { at: scheduleDate, repeats: true, every: 'day' },
+          sound: 'azan.wav',
+          actionTypeId: '',
+          extra: null
+        });
+      });
+
+      if (notifications.length > 0) {
+        await LocalNotifications.schedule({ notifications });
+        console.log(`✅ ${notifications.length} notifications scheduled.`);
+      }
+    } catch (error) {
+      console.warn('Error scheduling native notifications (may be web context):', error.message);
+    }
+  };
+
+  // ─── Clock & web-based azaan check ────────────────────────────────────────
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -95,7 +191,7 @@ export const PrayerProvider = ({ children }) => {
       checkPrayerTime(now);
     }, 1000);
     return () => clearInterval(timer);
-  }, [timings]);
+  }, []); // empty deps — always uses timingsRef.current (always fresh)
 
   const checkPrayerTime = (now) => {
     const hours = String(now.getHours()).padStart(2, '0');
@@ -105,12 +201,11 @@ export const PrayerProvider = ({ children }) => {
 
     if (seconds === '00') {
       const isFriday = now.getDay() === 5;
+      const current = timingsRef.current; // always read latest timings
 
-      Object.entries(timings).forEach(([prayer, timeObj]) => {
-        // Skip Zohr on Fridays and Juma on non-Fridays 
+      Object.entries(current).forEach(([prayer, timeObj]) => {
         if (isFriday && prayer === 'zohr') return;
         if (!isFriday && prayer === 'juma') return;
-
         if (timeObj.azaan === timeString) {
           playAzaan(prayer);
         }
@@ -119,44 +214,45 @@ export const PrayerProvider = ({ children }) => {
   };
 
   const playAzaan = (prayerName) => {
+    // Web notification
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(registration => {
-          registration.showNotification(`Time for ${prayerName} prayer!`, {
-            body: `It is time for ${prayerName} azaan.`,
+          registration.showNotification(`🕌 ${prayerName} ki Azaan!`, {
+            body: `Masjid Faizan e Taj mein namaz ka waqt ho gaya.`,
             icon: '/icon.svg',
             vibrate: [200, 100, 200, 100, 200, 100, 200],
           });
-        }).catch(err => {
-          new Notification(`Time for ${prayerName} prayer!`);
+        }).catch(() => {
+          new Notification(`🕌 ${prayerName} ki Azaan!`);
         });
       } else {
-        new Notification(`Time for ${prayerName} prayer!`);
+        new Notification(`🕌 ${prayerName} ki Azaan!`);
       }
     }
 
+    // Play audio
     azaanAudio.currentTime = 0;
-    azaanAudio.play().catch(e => console.error("Audio block by browser:", e));
+    azaanAudio.play().catch(e => console.error('Audio blocked by browser:', e));
   };
 
+  // ─── Admin update functions ────────────────────────────────────────────────
   const updateTiming = async (prayer, type, time) => {
     const newTimings = {
-      ...timings,
-      [prayer]: { ...timings[prayer], [type]: time }
+      ...timingsRef.current,
+      [prayer]: { ...timingsRef.current[prayer], [type]: time }
     };
-    
-    // Update local state immediately for fast response
     setTimings(newTimings);
-    
-    // Push changes to Supabase if configured
+
     if (supabase) {
       try {
-        await supabase
+        const { error } = await supabase
           .from('app_settings')
           .update({ timings: newTimings })
           .eq('id', 'timings');
+        if (error) throw error;
       } catch (error) {
-        console.error("Failed to update Supabase:", error);
+        console.error('Failed to update Supabase:', error);
       }
     }
   };
@@ -165,12 +261,14 @@ export const PrayerProvider = ({ children }) => {
     setTimings(newTimingsObject);
     if (supabase) {
       try {
-        await supabase
+        const { error } = await supabase
           .from('app_settings')
           .update({ timings: newTimingsObject })
           .eq('id', 'timings');
+        if (error) throw error;
+        console.log('✅ Timings saved to Supabase — all devices will update.');
       } catch (error) {
-        console.error("Failed to update Supabase bulk:", error);
+        console.error('Failed to update Supabase bulk:', error);
       }
     }
   };

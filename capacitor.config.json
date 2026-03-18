@@ -1,5 +1,19 @@
 {
   "appId": "com.masjid.faizan.app",
   "appName": "MasjidFaizan",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "url": "https://faizan-e.netlify.app",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#C9A84C",
+      "sound": "azan.wav"
+    }
+  }
 }
