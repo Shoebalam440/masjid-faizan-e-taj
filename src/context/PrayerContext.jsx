@@ -16,6 +16,11 @@ const azaanAudio = new Audio('/azan.mp3');
 
 // Unlock audio on mobile with first user interaction
 const unlockAudio = () => {
+  // Request Notification permission properly via user gesture
+  if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+
   // Try playing an empty/silent tick or just play and pause immediately
   azaanAudio.play().then(() => {
     azaanAudio.pause();
@@ -74,15 +79,20 @@ export const PrayerProvider = ({ children }) => {
   };
 
   const playAzaan = (prayerName) => {
-    const permission = Notification.permission;
-    if (permission === 'granted') {
-      new Notification(`Time for ${prayerName} prayer!`);
-    } else if (permission !== 'denied') {
-      Notification.requestPermission().then(newPerm => {
-        if (newPerm === 'granted') {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(registration => {
+          registration.showNotification(`Time for ${prayerName} prayer!`, {
+            body: `It is time for ${prayerName} azaan.`,
+            icon: '/icon.svg',
+            vibrate: [200, 100, 200, 100, 200, 100, 200],
+          });
+        }).catch(err => {
           new Notification(`Time for ${prayerName} prayer!`);
-        }
-      });
+        });
+      } else {
+        new Notification(`Time for ${prayerName} prayer!`);
+      }
     }
 
     azaanAudio.currentTime = 0;
