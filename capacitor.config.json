@@ -1,6 +1,6 @@
 {
   "appId": "com.masjid.faizan.app",
-  "appName": "MasjidFaizan",
+  "appName": "Masjid Faizan-E-Taj",
   "webDir": "dist",
   "server": {
     "url": "https://faizan-e.netlify.app",

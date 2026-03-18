@@ -1,4 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#064E3B" rx="100" />
-  <path d="M360 256C360 313.4 313.4 360 256 360C198.6 360 152 313.4 152 256C152 198.6 198.6 152 256 152C264.4 152 272.5 153.1 280.2 155.1C248.8 171.1 227.1 204.3 227.1 242.9C227.1 292.8 267.6 333.3 317.5 333.3C337.8 333.3 356.5 326.6 371.7 315.4C368.1 315.8 364.1 316 360 316L360 256Z" fill="#D4AF37" />
+  <!-- Background -->
+  <rect width="512" height="512" fill="#064E3B" rx="80"/>
+  
+  <!-- Mosque dome silhouette -->
+  <ellipse cx="256" cy="340" rx="110" ry="70" fill="#C9A84C" opacity="0.15"/>
+  <rect x="156" y="340" width="200" height="80" fill="#C9A84C" opacity="0.9"/>
+  <path d="M156 340 Q256 220 356 340" fill="#C9A84C" opacity="0.9"/>
+  <!-- Center dome -->
+  <path d="M210 340 Q256 265 302 340" fill="#B8962A"/>
+  <!-- Minarets -->
+  <rect x="130" y="290" width="24" height="130" fill="#C9A84C" rx="4"/>
+  <ellipse cx="142" cy="290" rx="12" ry="18" fill="#C9A84C"/>
+  <rect x="358" y="290" width="24" height="130" fill="#C9A84C" rx="4"/>
+  <ellipse cx="370" cy="290" rx="12" ry="18" fill="#C9A84C"/>
+  
+  <!-- Golden Crescent Moon -->
+  <circle cx="256" cy="145" r="68" fill="#C9A84C"/>
+  <circle cx="288" cy="125" r="55" fill="#064E3B"/>
+  
+  <!-- Star -->
+  <polygon points="318,108 323,122 338,122 326,131 331,145 318,136 305,145 310,131 298,122 313,122" fill="#C9A84C"/>
+  
+  <!-- Glow effect -->
+  <circle cx="256" cy="145" r="68" fill="none" stroke="#F0C060" stroke-width="2" opacity="0.4"/>
 </svg>
