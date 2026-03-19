@@ -9,20 +9,22 @@ const islamicMonths = [
   'Ramadan', 'Shawwal', 'Dhu al-Qi\'dah', 'Dhu al-Hijjah'
 ];
 
-// Some fixed approximate dates for demonstration
 const upcomingEvents = [
-  { name: 'Ramadan Begins', hijriDate: '1 Ramadan 1447', approxGregorian: 'March 2026' },
-  { name: 'Eid al-Fitr', hijriDate: '1 Shawwal 1447', approxGregorian: 'April 2026' },
-  { name: 'Hajj Begins', hijriDate: '8 Dhu al-Hijjah 1447', approxGregorian: 'May 2026' },
-  { name: 'Eid al-Adha', hijriDate: '10 Dhu al-Hijjah 1447', approxGregorian: 'May 2026' },
-  { name: 'Islamic New Year', hijriDate: '1 Muharram 1448', approxGregorian: 'June 2026' },
+  { name: 'Eid ul-Fitr', hijriDate: '1 Shawwal 1447', approxGregorian: '20-21 March 2026' },
+  { name: 'Hajj Begins', hijriDate: '8 Dhu al-Hijjah 1447', approxGregorian: '25 May 2026' },
+  { name: 'Eid ul-Adha', hijriDate: '10 Dhu al-Hijjah 1447', approxGregorian: '27-28 May 2026' },
+  { name: 'Islamic New Year', hijriDate: '1 Muharram 1448', approxGregorian: '16 June 2026' },
+  { name: 'Ashura', hijriDate: '10 Muharram 1448', approxGregorian: '26 June 2026' },
+  { name: 'Eid Milad un-Nabi', hijriDate: '12 Rabi al-Awwal 1448', approxGregorian: '26 August 2026' },
 ];
 
 const CalendarPage = () => {
-  const [currentDate, setCurrentDate] = useState(moment());
+  // Use a -1 day offset for India moon sighting
+  const getAdjustedDate = () => moment().subtract(1, 'days');
+  const [currentDate, setCurrentDate] = useState(getAdjustedDate());
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentDate(moment()), 60000);
+    const timer = setInterval(() => setCurrentDate(getAdjustedDate()), 60000);
     return () => clearInterval(timer);
   }, []);
 

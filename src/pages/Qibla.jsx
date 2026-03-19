@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Navigation, AlertCircle, RefreshCw } from 'lucide-react';
-
+import { Geolocation } from '@capacitor/geolocation';
+import { Capacitor } from '@capacitor/core';
 // Kaaba coordinates
 const KAABA_LAT = 21.4225;
 const KAABA_LON = 39.8262;
@@ -29,25 +30,34 @@ const QiblaPage = () => {
 
   // Get GPS location
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setError('GPS aapke device par available nahi hai.');
-      return;
-    }
-    setPermStatus('requesting');
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
+    const fetchLocation = async () => {
+      setPermStatus('requesting');
+      try {
+        if (Capacitor.isNativePlatform()) {
+          const perm = await Geolocation.checkPermissions();
+          if (perm.location !== 'granted') {
+            const req = await Geolocation.requestPermissions();
+            if (req.location !== 'granted') {
+              setError('Location access denied. Please enable it in Settings.');
+              setPermStatus('denied');
+              return;
+            }
+          }
+        }
+        
+        const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
         const { latitude, longitude, accuracy: acc } = pos.coords;
         setLocation({ lat: latitude, lon: longitude });
         setQiblaBearing(calculateQibla(latitude, longitude));
         setAccuracy(Math.round(acc));
         setPermStatus('granted');
-      },
-      (err) => {
-        setError('Location access nahi mili. Settings mein Location enable karein.');
+      } catch (err) {
+        setError('Location enable na ho saki. Please allow location access.');
         setPermStatus('denied');
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-    );
+      }
+    };
+    
+    fetchLocation();
   }, []);
 
   // Compass / Device orientation

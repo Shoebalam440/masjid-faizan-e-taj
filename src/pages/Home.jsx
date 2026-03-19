@@ -3,7 +3,7 @@ import { usePrayer } from '../context/PrayerContext';
 import PrayerCard from '../components/PrayerCard';
 import Clock from '../components/Clock';
 import { useNavigate } from 'react-router-dom';
-import { Settings } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Home = () => {
@@ -107,6 +107,29 @@ const Home = () => {
                         />
                     ))}
             </div>
+
+            {/* Location Link to the Masjid */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+                style={{ marginTop: '2rem' }}
+            >
+                <a 
+                    href="https://maps.app.goo.gl/kTvha6TLsVvAtTL57" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem',
+                        padding: '1.2rem', borderRadius: '16px', textDecoration: 'none',
+                        background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)',
+                        color: 'var(--primary-gold)', fontWeight: 600, fontSize: '1.1rem',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                    }}
+                >
+                    <MapPin size={24} /> Masjid Faizan-E-Taj (Navigate)
+                </a>
+            </motion.div>
         </div>
     );
 };
