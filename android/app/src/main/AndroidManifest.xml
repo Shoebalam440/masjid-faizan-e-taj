@@ -33,9 +33,32 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
     </application>
 
-    <!-- Permissions -->
-
+    <!-- ===== CORE PERMISSIONS ===== -->
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- ===== NOTIFICATION PERMISSIONS ===== -->
+    <!-- Android 13+ par runtime notification permission required hai -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Vibration for notifications -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- ===== EXACT ALARM / AZAAN PERMISSIONS ===== -->
+    <!-- Android 12 (API 31) par exact alarms ke liye zaroori -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+    <!-- Android 14 (API 34) par alarm/clock apps ke liye - Azaan app qualify karta hai -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+
+    <!-- ===== BACKGROUND EXECUTION ===== -->
+    <!-- Phone restart ke baad notifications restore karne ke liye ZAROORI -->
+    <!-- Capacitor's NotificationRestoreReceiver tabhi kaam karta hai -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Deep sleep mein bhi processor jagane ke liye -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
 </manifest>
