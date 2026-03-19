@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { usePrayer } from '../context/PrayerContext';
 import PrayerCard from '../components/PrayerCard';
 import Clock from '../components/Clock';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -48,9 +48,30 @@ const Home = () => {
         return `${formattedHours}:${minutes} ${ampm}`;
     };
 
+    const navigate = useNavigate();
+    const [tapCount, setTapCount] = useState(0);
+
+    // Secret Admin Access: Tap the header 5 times to open Admin panel
+    const handleSecretTap = () => {
+        setTapCount(prev => {
+            const newCount = prev + 1;
+            if (newCount >= 5) {
+                navigate('/admin');
+                return 0; // reset
+            }
+            return newCount;
+        });
+
+        // Reset tap count if user stops tapping after 2 seconds
+        setTimeout(() => setTapCount(0), 2000);
+    };
+
     return (
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+            <header 
+                onClick={handleSecretTap} 
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}
+            >
                 <motion.div 
                     initial={{ x: -20, opacity: 0 }} 
                     animate={{ x: 0, opacity: 1 }}
@@ -58,6 +79,7 @@ const Home = () => {
                 >
                     <img 
                       src="/icon.png" 
+
                       alt="Logo" 
                       style={{ width: '60px', height: '60px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }} 
                     />
@@ -68,22 +90,6 @@ const Home = () => {
                         <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Live Prayer Timings & Azaan Notifications</p>
                     </div>
                 </motion.div>
-
-                <Link to="/admin">
-                    <button style={{
-                        color: 'var(--primary-gold)',
-                        padding: '0.75rem',
-                        borderRadius: '50%',
-                        background: 'var(--glass-bg)',
-                        border: '1px solid var(--glass-border)',
-                        boxShadow: 'var(--glass-shadow)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                        <Settings size={28} />
-                    </button>
-                </Link>
             </header>
 
             <Clock />
